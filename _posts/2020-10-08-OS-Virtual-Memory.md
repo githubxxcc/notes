@@ -42,3 +42,9 @@ layout: notes
 
 
 
+### How to do page to frame translation?
+
+- Linear address part of it being the Page #
+- Use a Page Table with Page # as index, and entry as Frame #
+- Use a Page Tabel Base Register for different processes
+
