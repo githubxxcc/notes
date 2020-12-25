@@ -6,6 +6,7 @@ subtitle: 'Book report on The Design and Implementation of the 4.4 BSD Operating
 tags:
     - notes
     - goodstuff
+typora-root-url: ../../blog
 ---
 
 
@@ -16,7 +17,7 @@ This was originally written for book report assignment of the [CMU's OS class](h
 
 [Book Link](https://www.goodreads.com/book/show/5767.The_Design_and_Implementation_of_the_4_4_BSD_Operating_System)
 
-![image-20201225165210720](../img/in-post/image-20201225165210720.png)
+![image-20201225165210720](/img/in-post/image-20201225165210720.png)
 
 
 
