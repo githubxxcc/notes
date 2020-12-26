@@ -1,10 +1,13 @@
 ---
 layout: page
 description: "梦想还是要有的!"
+multilingual: true
 ---
 
+{% include multilingual-sel.html %}
+
 {% for post in paginator.posts %}
-<div class="post-preview">
+<div class="post-preview {{ post.lang }}">
     <a href="{{ post.url | prepend: site.baseurl }}">
         <h2 class="post-title">
             {{ post.title }}
@@ -50,3 +53,4 @@ description: "梦想还是要有的!"
     {% endif %}
 </ul>
 {% endif %}
+

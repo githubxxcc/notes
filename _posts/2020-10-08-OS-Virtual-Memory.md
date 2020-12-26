@@ -3,6 +3,7 @@ layout: post
 author: Ricky
 title: "Virtual Memory"
 subtitle: 'OS notes'
+lang: en
 tags: 
     - notes
 ---

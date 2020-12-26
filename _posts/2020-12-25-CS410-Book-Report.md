@@ -3,6 +3,7 @@ layout: post
 author: Ricky
 title: "CS410 Book Report"
 subtitle: 'Book report on The Design and Implementation of the 4.4 BSD Operating System'
+lang: en
 tags:
     - notes
     - goodstuff
