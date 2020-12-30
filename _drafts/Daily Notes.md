@@ -1,544 +1,12 @@
-# Daily Notes 
+---
+typora-root-url: ../../blog
+---
 
 
 
+# Daily Notes
 
-
-## OS 
-
-##### Segment descriptor: 
-
-- 64 bits that describe: base address / limit / privilege level / ... of a segment 
-- The calculated virtual linear address will then be used to access the virtual memory page structures 
-
-![image-20200912144051157](/Users/chenxu/Documents/notes/imgs/image-20200912144051157.png)
-
-##### Segment selector: 
-
-- 16 bits of information that is stored in the segment register (%CS, %DS, ..) that tells you where to find the segment descriptor 
-- RPL: uses as current p
-
-![image-20200912144212055](/Users/chenxu/Documents/notes/imgs/image-20200912144212055.png)
-
-
-
-
-
-
-
-P1 Design Doc 
-
-Files structure: 
-
-```
-/kern 
-	inc/ 
-		int_handle.h 					// interrupt handler declarations
-	
-	int_handle.c 						// C implementation of the handlers
-	int_handle_asm.S				// Assembly wrapper of the handlers 
-	
-	console.c 							// Handle specific functions implementation
-
-	
-```
-
-Functions: 
-
-```
-FILE int_handle.c
-	FUNC handler_install
-		- Get the IDT table 
-    - Install trap gate for each device 
-    
-  FUNC timer_init
-  	- Initialize the timer by configuring through IO ports
-  	- Install handler 
-  	
-  FUNC timer_handle
-  	- run the callback 
-  		**!**: How to store the callback 
-  	- reply to the hardware 
-  	
- 
-	 
-FILE video.c
-	FUNC putbyte:
-		- get_cursor
-		- Do:
-			1. \n => switch line/scroll 
-			2. \r => change cursor 
-			3. \b => find previous char, no cross line 
-
-	FUNC putbytes
-		- use putbyte() 
-		- Assume the str is valid (ASSUME) 
-		
-	FUN draw_char: 
-		- Need to check color code / positions 
-		- No check on char (ASSUME)
-
-	FUNC set_term_color
-		- Need to check color code
-		
-	FUNC clear_console:
-		- hidden cursor stays hidden 
-		- could not do a memset since the color needs to be correct
-		
-	FUNC scroll_up:
-		- Need to copy the color bytes as well
-		- How about the color of the last line (use the term_color) (DESIGN)
-	
-	VAR cur_pos:
-		- row
-		- col
-	VAR color
-	
-	
-FILE keyboard.c
-	VAR head: position to push the data 
-	VAR tail: position to pop the data
-	FUNC push_byte: 
-		- if the next pos is not the tail, then
-		- add a byte to the head of the ring buffer 
-		- advance the head 
-		
-	FUNC readchar:
-		- read the scancode from buffer
-		- use the HASDATA | MAKE scancode to get the result
-		
-		
-	
-	
-
-
-
-```
-
-
-
-Game Design 
-
-```
-FUNC kernel_main:
-	- Handle interrupt handlers 
-	- start_game()
-	
-
-
-FUNC start_game:
-	- print introduction (intro())
-	- setup the 
-```
-
-```
-COMPONENT TILE_STATE 
-	STATEs
-		- cur_color: 		current color code
-		- cur_ch:				current char content
-		- content: 			underlying state (EMPTY, END_POINT)
-		- orig_color: 	original color
-		- orig_ch:			original char content 
-	
-	ACTIONs
-		- init(x):
-			given an original char, intilaize the tile
-			
-		- draw(color, ch):
-			draw a specific color and character 
-		
-		- revert:
-			back to its original display 
-		
-		- can_draw:
-			test if this tile can be connected to some color pipes. 
-			Only an not connected empty tile can be drawn. 
-			
-		- connected():
-			test if this tile has been part of connected pipe. 
-			A connected pipe's orig color/ch differs from the current ones
-
-			
-	
-	
-
-COMPONENT  BOARD
-	STATEs
-  	- tile_states: 	array of tile_state
-  	- op_stack: 		stack of operations started from current drawing 
-  	- num_endpts: 	number of end point pairs remaining 
-  	- running: 			if the game is running  
-  	- draw_color:		the current color being drawn, -1 for not drawing
-
-  
-  ACTIONs
-  	- handle:
-  		an entry point to handle the scancodes from the keyboard and dispatch
-  		corresponding events
-  	
-  	- start_draw()
-  		enter the drawing mode. 
-  		If the current tile is not a valid startng point, it has no effect. 
-  		Only an end point not yet connected can start the drawing 
-  	
-  	- move(dx, dy):
-  		move the cursor if not in the drawing mode 
-  		move the cursor and draw if in the crawing mode and can be drawn  
-  		if the next tile is not movable (due to boundary / drawing limit), 
-			nothing should be changed
-			it also pushes the movement ot the op_stack
-			
-		- complete_lvl()
-			happens when the move-to tile is an endpoint with the same color
-			of the current pipe. 
-			update the number of moves 
-	
-		
-		- undraw_pipe()
-			happens when the cursor is on a connected tile, this will disconnect
-			the two endpoints. The connected pipe needs to be valid. 
-			It also relies on the assumption that only 2 endpoints max per color.  
-  		
-  	
-COMPONENT DISPLAY
-	STATEs
-		- x: 		top_left x offset
-		- y: 		top_left y offset
-		- w: 		width 
-		- h: 		height
-
-	ACTIONs
-		- show: 		show the display on the console
-		- clear: 		clear to empty 
-
-COMPONENT INSTRUCTION: is a DISPLAY
-
-COMPOENTN GAME_STAT: is a DISPLAY 
-	STATEs
-		- cur_level:		current level 
-		- time_elapsed: time elaspsed this GAME 
-		- running: 			if game is running / paused 
-		- moves: 				number of moves from previous levels
-		- level_moves: 	number of moves current level
-		
-	ACTIONs
-		- done_level:		
-			called to update the game stats when a game is finished 
-		
-    - timer_tick:
-    	called every timer interrupt, should update the time_elasped 
-    
-    - restart_level:
-    	clear the current level stats
-    	
-    - pause/resume:
-    	pause/resume the timer 
-    
-		
-		
-
-```
-
-```
-2. Error handling?
-3. Input supported 
-4. Define rules 
-	- how moves is calculated
-	- how score is calculated 
-	- how time is tracked 
-	- how undo is performed 
-	
-Driver:
-- how to handle the console (fast procesing with the ring buffer)
-```
-
-
-
-
-
-
-
-TODO: 
-
-
-
-
-
-Console Related Design:
-
-- keep track of color
-- 
-
-
-
-Class Notes
-
-### Ops 
-
-1. Atomic Instruction sequence
-
-2. Voluntary de-scheduling 
-
-
-
-
-
-
-
-## Project 2
-
-vanish()
-
-task terminations: p6
-
-Threading Design 
-
-- Synchronous threading vs Asynchronous threading?
-- Fork() and exev() copies threads?
-- signal handling 
-
-
-
-Questions need to figure out 
-
-1. How to do software exception handling 
- - p11 
-
-2. When do you need software exception? 
-
-3. When to create a new thread 
-
-
-4. How to handle thread crash 
-5. How to handle legacy auto stack growth 
-	- use the `stack_test1 `
-	- need to install a handler with `swexn() `
-	- different in the multithreads program (handle the transition in `thr_init`)
-6. How to write syncrhonize primitives 
-7. what if a thread crashed from hardware exceptions (page fault?) ? and while holding on resources? or crashed volunatrily 
-
-
-
-Thread API: 
-
-1. `the_init`:
-
-   - Set up the software exception (transition from the legacy mode to multi threading mode) 
-   - :a: What data structures (with what scope) need to be setup? 
-
-   
-
-
-
-2. `thr_create` 
-
-   - need to setup a stack 
-     - :a: How to set up the stack? 
-     - :a: What is the size of the stack 
-     - :a: What if runs out of stack memory 
-
-   - How to call the thread_fork? 
-     - through asm code?
-   - The new thread needs to:
-     - set up software exception 
-     - Set up register values because all register values other than %eax will be the same 
-       - :a: what values should be set for these registers? 
-     - Set up the next instruction 
-   -  :a: How to make a thread exiting on `thr_exit` 
-     -  Set up the return value to `thr_exit`? 
-
-3. `thr_join`:
-
-   - how to wait for another thread 
-
-     - IF still running 
-
-       - Note it down somewhere that "I am waiting for thread X"
-       - Deschedule itself
-       - When thread X exitted, make me runnable 
-
-     - ELSE IF: x not exited 
-
-     - ELSE IF: someone joining X already 
-
-     - ELSE IF: x have already exited 
-
-     - ELSEIF: x never initialized 
-
-       
-
-4. `thr_exit`:
-   - This has to notifier the one calling thread join 
-   - call set_status if the last thread 
-   - Functins not calling it should also do a `thr_exit`
-   - :a: what resources is being cleaned up and what's not?
-
-
-
-5. `thr_getid`:
-   - just call gettid() right?
-   - is the thread id of the user be same as the kernel thread id? 
-     - It should be a 1:1 mapping model right? If thread_create will always call into the system call. 
-
-6. `thr_yield`:
-   - deschedule itself and make_runnable others if specified 
-
-7. How to make thread routines thread-safe? 
-8. How to make thread library effecient (system call might "take a while" to run)?
-   - Try not calling into the kernel? 
-
-9. Set up a software exception handler for thread crash 
-10. Where to set the initial address (stack_high / esp) 
-
-## Reading
-
-atomic updates on a shared data structure do not mean no race condition 
-
-
-
-# OH 
-
-<img src="/Users/chenxu/Library/Application Support/typora-user-images/image-20200925133937041.png" alt="image-20200925133937041" style="zoom:30%;" />
-
-What's wrong with this code?
-
-> going_out_of_business becomes true when cond_wait wakes up? 
-
-# Database 
-
-### P2
-
-Questions: 
-
-- DeleteEntry call signature changes with addition of RID 
-
-
-
-
-
-# RAFT revisit
-
-- Data only flows from leader to followers 
-- Safety invariant: if one server applied a log entry, others should do the same for that log index. 
-
-
-
-How to ensure one leader one term?
-
-
-
-How to exit the candidate state? (3)
-
-
-
-WHat does the follow do on receiving request votes?
-
-
-
-When is an entry safely replciated?
-
-
-
-What gives the log matching property (a log at an index and all logs preceiding it, if matched with term, should be identical)
-
-- A log entry never changes its index 
-- Logs consistency check (receiver checks if the log entry before new entries are found in its local logs)
-  - nextIndex in the leader (keeps decrementing) until make sure followers catch up
-  - An optimization (skip all wrong entries with the same incorrect term) could save number of AppendEntries calls if the follower replies the index of the first log with that non-matching log term. 
-
-
-
-How to prevent a stale leader?
-
-- Alternative would be allow leaders to catch up
-- Raft enforces update-to-date leader during election (voters will reject if itself more updated)
-
-
-
-Why cannot determinate commitment from previous terms (when leader recovers)?
-
-- When recovering, even a log previous term is being replicated on majority, another server (with a more recent log) could become leader, and overwrite it. 
-
-
-
-Consensus log entries:
-
-- Commit entries also ensure history 
-- 
-
-
-
-Leader: 
-
-- Should try forware entries if follower fails/network slow, EVEN after replying to client 
-- include commitIndex (highest log entry committed) in messages to others
-
-
-
-
-
-## OS 
-
-BSD context switching 
-
-- voluntary and involuntary context switches happen in different routines. 
-
-
-
-### Question 1: Educational value of material
-
-While doing our P3, I was curious how FreeBSD implements synchronization in the kernel. The section on "Context Switch" covers some really cool design and data structures. The most interesting being the "turnstile". 
-
-I knew that a kernel thread might block for different reasons, but then came to realize that a thread will also block for a different period of time depending on the reason: a long wait might happen if a thread is waiting for an event that could only happen at an indeterminate time in the future, such as user input; a medium wait would happen if the event it is waiting on might not happen immediately but not too far in the future, such as reading from disk; and a short wait happens when a lock request is not granted (in fact, this is the only case a short wait happens in FreeBSD). 
-
-The turnstile is what FreeBSD uses to manage a short-term lock. Each turnstile keeps track of:
-
-1. the owner of the lock (pointer to thread's TCB)
-2. pointer to the lock 
-3. a list of waiters
-4. pointer to other turnstiles. 
-
-One less intuitive design regarding the turnstile is its ownership. A turnstile is owned by a thread, rather than a lock because there are way more locks than a thread in the kernel. A turnstile will be allocated at thread's creation, and passed along between different threads during execution: when a thread gets blocked on a lock, it will add itself to the waiters of the turnstile if there is already a turnstile, and add its turnstile to a free list. If it is the first thread getting blocked, it will give out its turnstile. When a thread is unblocked, it will take a turnstile from the free list if it is not the last one. 
-
-Another functionality that the turnstile made possible is priority propagation when a thread with higher priority trying to acquire a lock owned by a thread with lower priority (priority inversion). With the owner TCB, the higher priority thread could "lend" its priority to the low-priority thread running. When the low-priority lock owner thread unlocks, it could then return to its original priority. 
-
-A related concept to turnstile is called "wait-channel", which is a pointer that represents a resource that a thread could wait on. Lock is a kind of wait channel, and the wait channel of a lock will be used as a key into a global turnstile hash table to derive the turnstile. 
-
-### Question 2: Recommendation
-
-I would probably recommend this book to someone interested in knowing how a mature operating system is implemented, but not who wishes to learn operating system concepts. At first, I tried to use this book as a guide to teaching me how to write a kernel, wishing to find snippets or chapters that discuss some of the implementations in great detail, such as deadlock avoidance/prevention, process termination synchronization, kernel synchronization, etc. However, I soon realized that although the book covered such things, but not detailed enough as a "reference kernel teaching guide". After all, that might not be the most suitable usage of this book. 
-
-But the chapters that cover security, filesystems, etc are great for anyone who wants to learn the relevant topics. Those topics, however, are not so easy to digest since the book does go into details. Overview for some of the topics like the Fast Filesystem, the Zettabyte Filesystem is not easy to understand, even though it should be a high-level discussion of the topic. 
-
-
-
-### Question 3: Value of this assignment
-
-I think it is great that the course staff kind of forces us to do more reading! Fortunately, my partner and I pick the same book to read, and it was from our discussion that I felt I learned the most because I tried to internalize the content and discuss those topics I read with him. So I guess maybe more frequent discussion in the format of post/"chapter report" among partners or different groups would be a good exercise to add to the book report assignment. This will also "force" us to not do binge-reading in some ways. 
-
-
-
-What is a wait-channel, and how process wake and sleep on it?
-
-
-
-Why are there different terms locks?
-
-- short term for acquiring lock 
-- Mid-term for sleeps / I/O
-- long-term for waiting for user?
-
-
-
-What is turnstile? 
-
-- A data-structure used to manage short-term blocks
-- It has a header that maps from the address to the locks? (Not sure what is the key of that hash header tho)
-- <img src="/Users/chenxu/Library/Application Support/typora-user-images/image-20201106124338610.png" alt="image-20201106124338610" style="zoom:50%;" />
-- A turnsitle is owned by the thread (since a thread blocks on at most 1 lock)
-- priory inversion will be fixed with priority propogation through the turnstile waiting list 
-
-
+[TOC]
 
 
 
@@ -652,143 +120,6 @@ XU Chen
 
 
 
-# OS P4 
-
-Trap and emulate approach
-
-- Guest kernel GP fault, Host kernel inspects during GP handler
-- Guest kernel PF (writing to console memory), Host kernel handles it. 
-- Requires the fault handlr **disassemble** fault address to understand what the guest kernel wants to do! :dizzy_face:
-
-
-
-Paravirtualization approach
-
-- rewrite part of the guest kernel so that instructions that would be trap-and-emulated now will go down a special function call 
-- Interface allows bundle multiple special instructions into a single call (e.g. set_timer_rate())
-
-
-
-Some requirements:
-
-- no need for dual-kernel even if it is possible 
-
-
-
-Booting guest kernels
-
-- need to setup **Boot VM**
-
-
-
-Interrupting the guest :
-
-|              | physical interrupt (timer)                                   | exception (divide by zero) |
-| ------------ | ------------------------------------------------------------ | -------------------------- |
-| Guest User   | guest user handled to guest kernel. Host kernel needs to be in the picture? | guest user killed          |
-| Guest Kernel |                                                              |                            |
-|              |                                                              |                            |
-
-- Not to interrupt the guest kernel if the guest kernel disabled interrupt 
-- all guest kernel IDT entries are now interrupt gate 
-
-
-
-hyper calls:
-
-- `hv_iret`: what kind of checking fot eh ELFAGs 
-
-
-
-
-
-Questions: 
-
-- How to set the segmentation for guest kernel 
-  - construct descriptors in the GDT for the guest kernel
-  - max size of virtual address 
-
-
-
-
-
-Things to happen: 
-
-- Host: check text region in `exec_handler` 
-- Direct map the guest virtual frame to guest physical frame (for guest kernel only, not guest user right?)
-
-- Host: allocate guest physical pages (directly mapped the entire guest kernel?)
-- Set those register values 
-- Guest kernel: `hv_setpd` 
-- HOW TO GO TO GUEST KERNEL? some `gk_iret`
-
-
-
-Questions:
-
-- How to enter guest kernel mode?
-- 
-
-Things to track:
-
-- guest kernel size?
-
-
-
-Gues kernel vm related: 
-
-- GVA -> GPA is fixed, so given a GPA -> GVA, then get VA, 
-- probably don't need to maintain the guest physical to physical mapping 
-
-
-
-
-
-```
-hv_magic: 
-- return the magic number 
-
-
-hv_disable_interrupts: 
-- TODO 
-
-
-hv_enable_interrpts: 
-- TODO 
-
-
-hv_setidt: 
-- modify the virtual IDT 
-
-
-hv_setpd:
-- get the linear virtual address pdbase(pdbase:V)
-- map the process pd according to the pdbase
-	- traverse the pdbase:V, for each mapped pde, pde:V, 
-		- get the guest physical address of the page table, pt:GF
-    - pt:GF should be directly mapped in guest's address space, so we also have pt:GV,
-    - translate that to linear virtual address pt:V, 
-    - for each present pte:V entry in that page table (read that page table)
-    	- reconstruct the linear virtual address of pte (V)
-    	- check if there is the (GF) mapped to derive a HF
-    	- [allocate a GF -> HF mapping if not?]
-    	- update V -> HF in the uvm->pd 
-
-hv_adjustpg(addr):
-- addr is GV
-- get the linear virtual V
-- walk the guest's pdbase:V to get the GF address, and pte flags
-- check the mapping GF -> HF
-- use HF to update the uvm->pb with the same pte flags 
-
-hv_iret:
-- TODO
-```
-
-
-
-
-
 # Dario's Post 
 
 How Dario approach works?
@@ -811,59 +142,6 @@ One should be focusing on 2 rather 1. (Or at least he is)
 Having the state and the central goverment fight over relative powers is a marker for entering the Stage 6 (civil war)
 
 
-
-
-
-# IPC and RPC 
-
-Communication and synchronization pattern: 
-
-- blocking send
-  - Good for request/response pattern 
-  - Bad for producer and consumer pattern (long waiting time)
-- non-blocking send
-- blocking recv
-  - good for 'server thread' / req+res pattern 
-  - bad for handling idle client
-- Non-blocking recv
-  - good for polling pattern (which could be costly though)
-- Timeout recv: 
-  - good performance
-  - but not stable across varying timer rates 
-
-
-
-The buffering problem!!!!!:a: 
-
-
-
-Marshalling
-
-- recursive data marshaling structs 
-- BUT implementation better to be iterative (don't have functions call short functions call short functions....)
-- Marhsalling usually takes multiple pass to use the memory 
-
-
-
-Segments 
-
-G: needs to be 1: 4KB granularity 
-
-DPL: 3 
-
-P : 1
-
-D/B flag:
-
-	- Code: 1: so that 32-bit addresses assumued 
-	- Stack: 1 for 32-bit stack pointer 
-
-
-
-Type field:
-
-- Code: 1 0 1 0
-- Data  0 0 1 0
 
 
 
@@ -911,56 +189,6 @@ The select performs best if a file contains a small range of values (like the fi
 background reclustering task based on depth(overlapping number of files at specific range )
 
 reclusting with levels 
-
-
-
-| Record Number | Name               | Value              | Type | TTL      |
-| ------------- | ------------------ | ------------------ | ---- | -------- |
-| R1            | c.root-servers.net | 192.33.4.12        | A    | 24 hours |
-| R2            | .                  | c.root-servers.net | NS   | 24 hours |
-
-
-
-| Record Number | Name       | Value      | Type | TTL      |
-| ------------- | ---------- | ---------- | ---- | -------- |
-| R3            | b.gtld.net | 198.31.2.8 | A    | 12 hours |
-| R4            | com.       | b.gtld.net | NS   | 12 hours |
-
-
-
-
-
-| Record Number | Name          | Value          | Type | TTL     |
-| ------------- | ------------- | -------------- | ---- | ------- |
-| R5            | takemypaw.com | 192.102.111.5  | A    | 2 hours |
-| R6            | findpet.com   | 192.102.111.6  | A    | 4 hours |
-| R7            | petpet.com    | 192.102.111.11 | A    | 2 hours |
-
-
-
-| Record Number | Name               | Value              | Type | TTl      |
-| ------------- | ------------------ | ------------------ | ---- | -------- |
-| R1            | c.root-servers.net | 192.33.4.12        | A    | 24 hours |
-| R2            | .                  | c.root-servers.net | NS   | 24 hours |
-| R8            | b.gtld.net         | 198.31.2.8         | A    | 12 hours |
-| R9            | com.               | b.gtld.net         | NS   | 12 hours |
-| R10           | takemypaw.com      | 192.102.111.5      | A    | 2 hours  |
-
-
-
-# HW OS 
-
-Instructions: 
-
-```
-mkdir -m 0700 -p /tmp/$USER/gpg-agent
-eval `/usr/bin/gpg-agent --pinentry-program /usr/bin/pinentry-curses --homedir /tmp/$USER/gpg-agent --daemon`
-
-```
-
-
-
-
 
 # TiKV 
 
@@ -1073,6 +301,30 @@ Push physical plan to TiKV (Storage) so that computation could be done closer to
 
 
 
+#### Follwer Read 
+
+https://pingcap.com/blog-cn/follower-read-the-new-features-of-tidb/
+
+##### Problems:
+
+All read requests were served by the leader, lower thoroughput by overloading the leader 
+
+
+
+##### Solution:
+
+Have the follower request the leader for committed index (aka, is this read request committed?), and wait until the request is committed and then apply it (returning results to the client). 
+
+So this helps by reducing load on the leader (assuming handling request consumes more resources than handling that committed index check) 
+
+
+
+##### Issues
+
+
+
+
+
 # Percolator
 
 #### Motivation 
@@ -1129,63 +381,156 @@ Push physical plan to TiKV (Storage) so that computation could be done closer to
 
 
 
+# DB Architecture Book 
+
+Main component of a DBMS
+
+![image-20201228152101828](/img/in-post/image-20201228152101828.png)
 
 
 
+### Processor Model 
+
+1. Process-per-worker (DB2, PostgreSQL, Oracle)
+2. Thread-per-worker:
+   1. OS Thread-per-worker (MySQL)
+   2. DBMS LWT per worker:
+      - It could be furthur broken done to whether the user thread is mapped to a process or to a OS thread. 
+3. Process Pool (Oracle's optional method) 
+4. Thread Pool (SQL Server's default) 
 
 
 
-# TA meeting 
+Interesting process model (in research still):
 
-raw images in the gdrive 
-
-points allocation for eahc question and total assignment 
+Rather than have a worker for all the stages, have multiple workers for a single query. So it acts more like a micro service/pipeline manner. StagedDB is an example
 
 
 
+### Query Processing 
+
+- Parsing  (type checking, name checking)
+
+- authrorization 
+
+  - It is usually deferred to query plan generation so that security check is decoupled from query plan (allowing multiple users with different security rights to share query plans )
+
+- Query rewrite: 
+
+  - View expansion: resolve view references into fully qualified table names and predicates
+
+  - constant evaluation
+  - logical rewrite: 
+    - boolean logic relimination (`x > 1 && x < 0 => False`)
+    - transtive logic: add additional predicate 
+  - Semantic optimization:
+    - a foreigh key referenced column's Table doesn't have to be joined if it is just used as a join predicate. Example: `select A.x FROM A, B WHERE A.fk = B.k`, where `B.k` is a foreign key constrain on `A.fk` could be simply `select A.x FROM A`
 
 
 
+### Query Optimization 
 
-# Intern Prcticum 
-
-During this year's summer, I worked at Facebook as a Production Engineering Intern under the guidance of Ryan Barber (r00t@fb.com). I worked with the Presto team, which maintains the Presto, a distributed query exeuction engine. The main goal of my project was to rewrite the query replay testing pipeline. The query replay tool is used as part of the testing pipeline to ensure a set of queries could be replayed at any cluster with the expected outcome and performance. 
-
-The existing query replay framework was built on top of legacy technology that is resource consuming. While supporting multiple queries to be replayed concurrently, the old tool consumes substantial amount of resources by launching a process for each query. My project invovles rewritting the tool so that it supports all the legacy usage (flags), but also facilitates the benchmarking usage by collecting metrics and statistics. 
-
-The project is primarily written in Python, and I used the asyncio library heavily for the new implementation. Other than the technical obstacles which required me to architecture the new tool with multiple event loops to be both scalable and effecient, the greatest lessons was on how to best do communication. There was definitely the need to communicate with collegues on various aspects of the project, such as usage requirement, feature request, bug report, and etc. More importantly, there was also the sharing of progress and result. Similar to what I did with school projects, I only thought of making a post about my final result when the internship ends, as a wrap-up. But apparently, I could have made more incremental updates on the project, or saught earlier feedbacks when possible. 
-
-Looking back at the internship, I wish I could have stepped out of the scope of my project and took other responsibility earlier. Also, I could have been more proactive, in my communication with the rest of the team, and in learning other relevant products and projects. Facebook has great infrastructures to ensure its product and service run reliably and effeciently, and I wish I had spent more times digging into the internals of other tools. 
-
+- Cascade (Top down) vs DP bottom up doesn't have difference in the asymptotic bound 
+- optimizer usually works on `SELECT..FROM..WHERE` query 
+- Plan space: traditionally only `left-deep`(where the right-hand input is always the base table), now more often `bushy` (whre both sides could be nested). 
+- selectivity esimation: use of histograms (even histograms with dependency are getting popular), as well as statistics. 
+  - Columns' historgrams are joined independently from each other previously
+  - TPC-DS benchmark now takes into dependency between different columsn 
+- parallel optimization: usually 2 phases, 1) optimize and output a single plan 2) executes that plan on multiple workers 
 
 
 
+### Access methods
+
+One of the main design choices is:
+
+> What if your underlying rows change its location, how does your index handle this?
+>
+> 	- secondary index / primary storage:  references will need to change when the underlying row shifts 
+> 	- primary storage: like a B+ tree split will move tons of data 
+
+1. secondary indexes stores the RIDs/physical references like pointers => lots of movements when the primary storage changes 
+2. forwarding pointer => additional I/O to look at the real reference (DB2 does this) 
+3. use primary key => lower performance but don't need to move (Orcacle + SQL Server) 
+4. Combo 1+3 => depends on the situations, use differnt (Oracle)
+5. DON'T allow primary storage as B+ index (Yay, DB2)
 
 
 
+### Welcome to OLAP world (or Data warehousing) 
+
+Changes:
+
+- indexes less updates (no more B+tree, but Bit-indexes)
+- Fast bulk load (loading large amount of data for data analysis) 
+- support of materialized view to avoid multiple joins on the fly 
 
 
-# DB
 
-- Logical composition 
+### Future Trends that will affect DB
+
+##### The many cores machines 
 
 
 
-How is a query template like?
+>One key challenge for parallel software architectures in the next decade arises from the desire to exploit the new generation of “many- core” architectures that are coming from the processor vendors. These devices will introduce a new hardware design point, with dozens, hun- dreds or even thousands of processing units on a single chip, com- municating via high-speed on-chip networks, but retaining many of the existing bottlenecks with respect to accessing off-chip memory and disk. This will result in new imbalances and bottlenecks in the memory path between disk and processors, which will almost certainly require DBMS architectures to be re-examined to meet the performance potential of the hardware.
 
-When would cluster change in one day or two?
+# Great Ideas in CS
+
+#### Caching and Lease 
+
+Problems to solve: 
+
+- costly to check everytime
+
+
+
+Real applications: 
+
+- TiKV uses LeaseRead so that the Raft leader in a region doesn't need to check other peers while serving the Read  
+- Databases optimizers use it to cache compiled query plan (so new queries don't have to go through parsing\binding\rewriting again)
+
+
+
+#### Bloom filter
+
+Problems to solve:
+
+- quicker and more condensed way of finding out if something exists (or rather does not exist) 
+
+
+
+Real Apps: 
+
+- Bit index in data warehousing 
+
+
+
+#### Decoupling 
+
+Why: 
+
+- better reusuablity 
+
+
+
+How:
+
+Break big things into smaller pieces 
+
+
+
+Example:
+
+In databases: 
+
+- Division of query plan generation and security  checking 
 
 
 
 
 
 # Questions to ask 
-
-Why we don't have EINTR as part of the design in our Pebbles kernel?
-
-
-
-
 
 Daily Routine Reading List:
 
