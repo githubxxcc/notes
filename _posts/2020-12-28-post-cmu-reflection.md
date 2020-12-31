@@ -3,7 +3,7 @@ layout: post
 author: Ricky
 title: 代码培训班买家秀
 subtitle: CMU写代码进修
-lang: ch 
+lang: zh 
 tags: 
 - reflex
 typora-root-url: ../../blog
