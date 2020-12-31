@@ -1,7 +1,7 @@
 ---
 layout: post
 author: Ricky
-title: Database Architeture Book summary 
+title: Architecture of a Database System Summary 
 subtitle: 'Architecture of a Database System - Redbook reading series'
 lang: en
 tags:
@@ -12,8 +12,6 @@ typora-root-url: ../../blog
 ---
 
 
-
-# DB Architecture Book 
 
 Well, wish I had found this [mini-book](https://dl.acm.org/doi/10.1561/1900000002) a bit earlier. But still, this is a really great read! It covers basically all aspects of a database system. What I like the most is that the author also gives industrial practice on each of the component. 
 
