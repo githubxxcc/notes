@@ -323,6 +323,72 @@ So this helps by reducing load on the leader (assuming handling request consumes
 
 
 
+# Database of Future 
+
+#### Some large paradigm shifts:
+
+- More in-memory DB of terabytes 
+
+- More active-active replication 
+- More NoSQL support from RDBMS
+- Other data processing framework (Spark?)
+
+> In effect, the OLTP marketplace is now becoming a main memory DBMS marketplace. Again, traditional disk-based row stores are just not competitive. To work well, new solutions are needed for concurrency control, crash recovery, and multi-threading, and I expect OLTP architectures to evolve over the next few years.
+>
+> My current best guess is that nobody will use traditional two phase locking. Techniques based on timestamp ordering or multiple versions are likely to prevail. The third paper in this section discusses Hekaton, which implements a state-of-the art MVCC scheme.
+>
+> Crash recovery must also be dealt with. In general, the solution proposed is replication, and on-line failover, which was pioneered by Tandem two decades ago. The traditional wisdom is to write a log, move the log over the network, and then roll forward at the backup site. This active-passive architecture has been shown in [[6](http://www.redbook.io/ch4-newdbms.html#ref-commandlogging)] to be a factor of 3 inferior to an active-active scheme where the transactions is simply run at each replica. If one runs an active-active scheme, then one must ensure that transactions are run in the same order at each replica. Unfortunately, MVCC does not do this. This has led to interest in deterministic concurrency control schemes, which are likely to be wildly faster in an end-to-end system that MVCC.
+>
+> --- [Redbook](http://www.redbook.io/ch4-newdbms.html)
+
+
+
+#### Spark 
+
+- Potential an interesting product (that is likely to last longer than MapReduce)
+- But still lacking as a SQL/Data warehouse product 
+- And lacks persistence (at 2016) 
+
+>The original argument for Spark is that it is a faster version of Map-Reduce. It is a main memory platform with a fast message passing interface. Hence, it should not suffer from the performance problems of Map-Reduce when used for distributed applications. However, according to Spark’s lead author Matei Zaharia, more than 70% of the Spark accesses are through SparkSQL. In effect, Spark is being used as a SQL engine, not as a distributed applications platform! In this context Spark has an identity problem. If it is a SQL platform, then it needs some mechanism for persistence, indexing, sharing of main memory between users, meta data catalogs, etc. to be competitive in the SQL/data warehouse space. It seems likely that Spark will turn into a data warehouse platform, following Hadoop along the same path.
+>
+>On the other hand, 30% of Spark accesses are not to SparkSQL and are primarily from Scala. Presumably this is a distributed computing load. In this context, Spark is a reasonable distributed computing platform. However, there are a few issues to consider. First, the average data scientist does a mixture of data management and analytics. Higher performance comes from tightly coupling the two. In Spark there is no such coupling, since Spark’s data formats are not necessarily common across these two tasks. Second, Spark is main memory-only (at least for now). Scalability requirements will presumably get this fixed over time. As such, it will be interesting to see how Spark evolves off into the future.
+>
+>--- Michael Stonebraker 2015
+
+
+
+Weak Isolation:
+
+- It is hard but it is rare to see anomalies under weak consistency model. 
+
+
+
+# Optimizer
+
+Ch7: Query Opt, http://www.redbook.io/ch7-queryoptimization.html
+
+
+
+#### The two OGs in the query optimizer world: 
+
+- System R (DP search) 
+- The Volcano/Cascade  (Top down), which are notable in 2 things:
+  - Extensible (parameterizable with multiple input languages an dexecution targets, making it handy for different execution engines and data models)
+  - Top-down goal oritend search strategy (not neccessirily better than bottom-up though, still debatable) 
+
+
+
+#### Progressive Query optimizing: 
+
+Key insight: why not optimize the query while executing it? 
+
+- Intra-operator: based on query execution stats, stopped/started operator. 
+- Inter-operator: used current operator's stats to generate operators in the future. 
+
+
+
+
+
 
 
 # Percolator
@@ -381,6 +447,18 @@ So this helps by reducing load on the leader (assuming handling request consumes
 
 
 
+
+
+# Postgres Internals 
+
+Resources: 
+
+- Internal tour PDF: https://www.postgresql.org/files/developer/tour.pdf
+
+
+
+
+
 # Great Ideas in CS
 
 #### Caching and Lease 
@@ -433,6 +511,15 @@ In databases:
 - Division of query plan generation and security  checking 
 
 
+
+#### Partitioning
+
+Some entities contain multiple components on which operations could be parallel but have to be serial because they are treate as one. 
+
+Example: 
+
+- Timestamp splitting: multiple timestamps for different fields 
+- Thread-local objects. 
 
 
 
