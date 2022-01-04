@@ -10,7 +10,150 @@ typora-root-url: ../../blog
 
 
 
-## Memory Ordering 
+
+
+# News reporting 
+
+[Crypto company Anchorage raises $80 million after getting federal banking charter](https://techcrunch.com/2021/02/25/crypto-company-anchorage-raises-80-million-after-getting-federal-banking-charter/)
+
+
+
+# AI Index Research 
+
+Ref: https://aiindex.stanford.edu/report/
+
+Chapter 1 Research: 
+
+- Number of AI journel grew 34.5%, larger than last yr's 19.6% 
+- China srupassed US in AI **journal citations** (but US still with more AI conference papers) 
+
+Chatper 2; Technical performance:
+
+- Generative everything (like DeepFake)
+- NLP needs some new evaluation metrics. The existing NLP evaluatin metric no longer effective to measure models (they are doing so well - with human level performance) 
+
+Chapter 3: Economy
+
+- US recorded drop in AI jobs (300k in 2020, vs 325k in 2019) 
+- Asia sees more increase in Jobs posted 
+- More money (9% more money)  put into smaller number of AI startups (5% more companies)
+
+Chapter 4: AI Education 
+
+- 23% of CS PhD are AI focused (survey based result)
+- 82% of foreign AI students stayed in the US
+
+# Command lIne tricks 
+
+- The use of `-I{}` to do string subs 
+
+```
+cat hosts | xargs -I{} ssh root@{} hostname
+```
+
+- `pgrep`, `pkill` :
+  - Search/kill with process (or arguments with `-f` ): 
+- `cut`, `paste`, `join` 
+  - For text file manipulation 
+
+
+
+# Wormhole 
+
+Problem:
+
+- Polling for each app is not realistic as App needs to determine the polling wait time etc
+- Updates interposed on writes require custom data stores => FB has so many and error prone for each data source to write to a customized data store 
+
+Solution HIgh level:
+
+- Publisher reads txn logs by producers (MySQL, ZippyDB) 
+- Encapsulate data in a wormhole update 
+
+
+
+Reliability 
+
+- [publisher failure] Multiple-copy reliable delivery: subscribers could specify multiple publisher 
+- [subscriber failure] Stateful position in txn logs most recently ACKed 
+
+Single-Copy Reliable Delivery 
+
+- TCP realiability 
+- periodicaly datamarker (30 seconds)
+
+
+
+Update:
+
+- Flow: combinationf of position + datasource for stream of data 
+- [stable case] One reader for reading from same positions for multiple flows 
+- [recovery case] Cluster flows so that a single reader could serve multiple flows => a Caravan! 
+- Shared TCP connection for multiple flows to the same subscriber 
+
+
+
+Load Balancing:
+
+- Among subscribers:
+  1. randomly selection
+  2. ZooKeeper based mechanism for dynamic redirecting
+
+
+
+
+
+Evaluation:
+
+Latency:
+
+- 50k updates over hours between pub and sub
+- pub and sub in same data centers
+- 99.5% updates delivered under 100ms
+- long tail of 5 seconds 
+
+
+
+IO vs latency tradefoff: 
+
+- 20GB to be sent over with 10 different datamarkers (0, 2, 4, ... 18)
+- more caravans allowed will reduce latency but with higher amplification factor 
+- 6x read amplication could reduce as 40% of latency
+
+
+
+Throughput:
+
+- subs max 600k updaates/sec without latency penalty (100ms)
+- pub 350MB/sec without parallelism support 
+
+
+
+Comparison with others
+
+Google's Thialfi:
+
+- different workload: Google mostly user apps, but FB's internal services => I/O effi requirement higher for FB
+- Thialfi only sending versions (for invaliudations most of the time) 
+
+
+
+
+
+Question:
+
+- What if more than once update during recovery is not allowed? 
+- Is there still the limit on publisher paralleism 
+
+
+
+# 公司
+
+小码教育： 战略投资
+
+
+
+# Memory Ordering 
 
 - we as programmers expect program order
 - processor aggresively reorders instructions to hide memory latency 
@@ -30,7 +173,7 @@ typora-root-url: ../../blog
 
 
 
-## Syncrhonization 
+# Syncrhonization 
 
 How does cache coherence handle load/stores sequence? 
 
@@ -58,7 +201,28 @@ LL/SC comparing to CMPXCHG/XCHG
 
 - LL/SC could detect A->B->A problem 
 
+# 社区
 
+需求：
+
+1. 邻里关系
+   1. 拼单
+2. 周边服务（家政、保姆、蔬菜）
+3. 物业管理
+   1. 报修
+
+
+
+
+
+学生校内社交需求难以被高效满足：学生们现在主要使用的社交软件包括QQ、微信，都是建立在熟人社交的基础上。熟人社交App的一些功能特性，比如只有验证后的好友才能进行互动、转发的信息内容限制在已经通过的好友圈子里，都大大限制了社交圈子的拓展。然而，作为校园内的学生，却总是会参与到各种各样的社交场合中，并且有社交需求向外拓展自己熟人的圈子。比如上课作为学生主要的一个校园活动，现有的微信、QQ等社交App并不能很好地满足学生寻求课友的机会；又比如学校里总会有各种各样的校园活动，而现有的社交平台并不能够很好地让学生寻找到志同道合、趣味相投的小伙伴。校内信息渠道低效学校场景下每天产生的信息流是巨大的，比如就业信息、课程反馈、转专业咨询、校内趣闻等等。这些信息对于身处于学校这个紧密社群内的学生来说，也是校园生活重要的一个元素。然而，现有的主流社交平台（微信、QQ、快手、抖音等）都不能成为这些信息的有效载体。一些仅有的官方网站、公众号，又局限于本身形式的单一和互动性差的限制。其次，社群恐慌心态（指一种由患得患失所产生持续性的焦虑，得上这种症的人总会感到别人在自己不在时经历了什么非常有意义的事情）是校园内学生或多或少会面临的。这也使得学生对这些身边的校园信息会有更大的关注度。线上线下场景融合困难在校园内会经常发生各式各样的线下活动（球赛、年级大会、汇演、比赛）。这些线下的活动目前并没有很好地结合线上的场景。而线上线下场景的结合会带来更多有趣的应用场景。
+
+
+
+竟品：
+
+- 叮咚小区：挂了
+  - 门槛设置100人上限？满足一定人数才可激活？
 
 # J1 豁免
 
@@ -69,56 +233,6 @@ https://instant.1point3acres.com/thread/662977
 https://www.1point3acres.com/bbs/thread-633686-1-1.html
 
 https://zhuanlan.zhihu.com/p/23264190
-
-
-
-Statement of Reason 
-
-To whom it may concern,
-This letter is to request a waiver for the 2-year home residence requirement based on the 'No Objection Letter' that will be obtained from my home country (P.R. China). The reasons I would like to apply for a waiver are the followings:
-I came to the U.S. as a J-1 exchange scholar in 2017 during my overseas exchange program at my college, the National University of Singapore. As a J-1 holder, I was fortunate to work for a Silicon Valley-based start-up Naya Health, and learned a great deal about entrepreneurship and technology. 
-
-After that, in 2019, as an F-1 student, I started my Master of Science in Computer Science at Carnegie Mellon University and will be graduating in December 2020. I have obtained my Post-completion OPT and will start my practical training as a Production Engineer at Facebook Inc. Facebook, as my employer, will sponsor me during the optional practical training period, helping me acquire industrial experience.
-
-I will apply for the No Objection Letter and my embassy will directly provide you with the `No Objection Letter` issued for me.
-I appreciate your support and assistance in waiving my two-year home country residence requirement.
-Sincerely,
-
-XU Chen
-
-12/01/2020
-
-
-
-06/18/2016 - 08/15/2016: F-1 status (N0017000058), Stanford Unviersity summer program
-
-08/15/2019 - Now: F-1 status (N0030638519), Carnegie Mellon University Master of Science in Computer Science
-
-
-
-尊敬的驻美总领馆：
-
-按照《J-1签证豁免申请办法（修订稿）》的要求，特此提出豁免本人的J-1两年回国服务要求的申请。本人于2019年5月获新加坡国立大学计算机学士文凭，2019年8月自费赴美学习至今。本人在2017年1月至2017年12月参加了新加坡国立大学海外交流项目，以J1访问学者身份在美国硅谷创业公司Naya Health实习。
-本人即将于2020年12月从美国卡内基梅隆大学毕业，已申请Post OPT并获批，将入职位于加利福尼亚州的Facebook工作深造。本人在海外留学期间一直是官方留学生学生联合会成员（新加坡学联，卡内基学联），受到了领事馆的不少照顾和指点。尤其是在疫情期间，收到来自外交部的抗疫资源，很是感动。本人希望能够在回国长期发展之前，在美国的科技公司深造一段时间，为之后回国的发展和贡献打下一个更加坚实的基础，特此提出J-1豁免申请。
-
-附：留学时间及经历
-2015年8月  - 2016年6月：就读新加坡国立大学
-2016年6月 - 2016年8月：F-1签证，自费赴美斯坦福大学暑期学校项目
-2016年8月  - 2017年1月：就读新加坡国立大学
-2017年1月- 2017年12月：J-1签证，以访问学者身份自费赴美Naya Health带薪实习，并在斯坦福大学就读。
-2017年12月- 2018年1月： 空闲在家（浙江杭州）
-2018年1月- 2018年5月：就读新加坡国立大学
-2018年5月- 2018年8月：北京微软亚洲研究院实习
-2018年8月- 2019年5月：就读新加坡国立大学
-2019年8月- 2019年11月：F-1签证，自费赴美卡内基梅隆大学就读计算机硕士。
-2019年11月- 2020年1月：空闲在家（浙江杭州）
-2020年1月- 至今：就读卡内基梅隆大学
-
-当前所持EAD 的有效时间为：2022年1月10日
-
- 
-
-
 
 # Dario's Post 
 
@@ -189,6 +303,226 @@ The select performs best if a file contains a small range of values (like the fi
 background reclustering task based on depth(overlapping number of files at specific range )
 
 reclusting with levels 
+
+
+
+# TiDB
+
+
+
+### Question
+
+1. https://pingcap.com/blog-cn/tidb-source-code-reading-11/ Index nested loop join: why the inner worker doesn't do probing?
+
+
+
+
+
+#### New DB Architecture
+
+https://pingcap.com/blog-cn/new-ideas-for-designing-cloud-native-database/
+
+- Still compute and storage seperation 
+- But compute nodes with some states (like cache) 
+  - -- This might result in more complex recovery mechanism as the compute node goes done 
+  - ++ good for OLTP workload 
+  - ++ shared most of the good things of "shared-everything" design 
+
+
+
+
+
+### Code components:
+
+https://pingcap.com/blog-cn/tidb-source-code-reading-2/
+
+
+
+### TiDB Architecture
+
+![image-20210215110410017](/img/in-post/image-20210215110410017.png)
+
+Differences with the NoisePage:
+
+- Use of MySQL protocol (See `server.go` as entry reference)
+- There is the session context? (What's this for?)
+- There is the local/distributed executor 
+
+
+
+Lifetime of a SQL 
+
+- `Session.Execute at session.go` : entry point for the execution 
+- Parser parses to AST 
+- Compile the AST node 
+- Optimizer to generate `ExecStmt` (`executor/adapter.go`)
+- executor encapsulated as a `recordSet`: executor + stmt + start_ts 
+
+![image-20210215135221731](/img/in-post/image-20210215135221731.png)
+
+
+
+###### Example: INSERT query 
+
+<img src="/img/in-post/image-20210215142359608.png" alt="image-20210215142359608" style="zoom:50%;" />
+
+
+
+
+
+### Parsing in TiDB 
+
+ref: https://pingcap.com/blog-cn/tidb-source-code-reading-5/
+
+Source code => Lex (define patterns) => Tokens
+
+Tokens => Yacc(with grammer) => AST 
+
+
+
+### Optimizing in TiDB 
+
+Ref: https://pingcap.com/blog-cn/tidb-source-code-reading-6/#optimizing
+
+Some functons:
+
+- `dagPhysicsOptimize`:  logical to physical ocnversion 
+- `convert2PhysicalPlan`: recursive does the optimzation 
+- `Task` : interface that is the unit of physicalPlan to be compared and chosen 
+
+
+
+#### Rule-based logical rules:
+
+1. Column pruning 
+   - `PruneColumns` interface implemented by all(?) operators 
+2. Min-max elimination (`min_max_eliinate.go`)
+   - from `scan + aggregation` to `scan + sort + limit` 
+   - if there is a sorted index, this is good 
+   - `NULL` value needs to be handled properly 
+3. Projection elimination 
+   - When: child operator producing all fields in projection 
+   - When: a parent operator is using a smaller set of fields 
+4. Predicate push down 
+   - Try to convert outter join to inner join (so that there is no need to add NULL joined rows)
+   - Push down predicate on each inner join table 
+   - Certain operators could not have predicate push down (predicate push down does not conform to commutativity)
+     - select then limit VS limit then select (predicate on select in this case could not be pushed down to limit) 
+5. GroupBy elimination:
+   - if the group by column(s) are unique, then it could be eliminated 
+6. Outer join elimination:
+   - outer join could be eliminated if (1 AND (2.1 OR 2.2)). 
+     1. JoinOp's parent operator only uses outer plan's columns 
+     2. one of the below:
+        1. join key is unique in the inner plan 
+        2. JoinOp's parent operator will do distinct operationon the outer plan's columns 
+   - **Intuition is: if the resulting outer join's output rows are all unique, there is no point of using join right?** 
+7. Nested query expansion/elimination:
+   - OK, [this shit](https://pingcap.com/blog-cn/tidb-source-code-reading-21/#%E5%AD%90%E6%9F%A5%E8%AF%A2%E4%BC%98%E5%8C%96--%E5%8E%BB%E7%9B%B8%E5%85%B3) is rather complicated. I am not ready to dive into the details yet
+
+
+
+
+
+##### IMPORTANT OP: Propogate special property to all the nodes
+
+This is one step during optimization. 
+
+**Unique property:** The property of some columns being Primary key indexed or unique key indexed could be propogate to all nodes to be utilized:
+
+- Projection: if `a,b,c` being projected, and `a` is a unique indexed key, then `a` 's unique property should be propogated up (only the child nodes are aware of this)
+
+**MaxOneRow**: only need to output one 
+
+
+
+### Index based range filtering:
+
+**Single column indexed (e.g., column `a`)**
+
+- AND clauses: remove those not covered by the index 
+
+  - `a > 1 and a < 5 and b>2` => `a > 1 and a < 5`
+
+- OR: if any clause could not be used (e.g. with point filter on one of the columns), the entire expression could not be used. 
+
+  - `a = 1 or b = 2` => NO 
+  - `a  > 10 or (a < 2 and b = 1)` => `a > 10 or a < 2` 
+
+  
+
+**Multiple column indexed (`a, b, c` ):**
+
+- AND: only if all preceding clauses are point search, the next column will be included:
+  - `a > 1 and b = 1` => `a > 1` 
+  - `a in (1, 2, 3) and b > 1` => `a in (1, 2,3) and b > 1`
+- OR: if any of the clause (those ANDs) could not be used entirely, the entire OR chain could not be used 
+  - `a > 1 and b =1 OR a in (1, 2, 3) and b > 1` => NO 
+
+
+
+### DDL in TiDB 
+
+- A DDL job queue for to-be-handled DDL queries, a history queue for jobs done 
+  - Add index special job queue is also used to provide concurrent adding index 
+- Only the owner in a cluster will be handling it. Non-owner only queues it at a DDL job queue
+- DDL changes going through phases. (as per Google's F1?)
+
+
+
+
+
+
+
+
+
+
+
+
+
+### Questions
+
+1. What is the session context for 
+2. why Hash parition only supports integers, but key based parition supports Blob and Text as well. 
+3. 
+
+
+
+
+
+# Apache Pinot 
+
+By @kishoreBytes
+
+Requirement:
+
+User facing => low QPS 
+
+
+
+
+
+##### Segments
+
+![image-20210215165331047](/img/in-post/image-20210215165331047.png)
+
+- segment has indepdent plan 
+
+
+
+# Paul Graham post 
+
+http://paulgraham.com/worked.html
+
+
+
+Working on things less prestigious
+
+> It's not that unprestigious types of work are good per se. But when you find yourself drawn to some kind of work despite its current lack of prestige, it's a sign both that there's something real to be discovered there, and that you have the right kind of motives. Impure motives are a big danger for the ambitious. If anything is going to lead you astray, it will be the desire to impress people. So while working on things that aren't prestigious doesn't guarantee you're on the right track, it at least guarantees you're not on the most common type of wrong one.
+
+
+
+
 
 # TiKV 
 
@@ -643,6 +977,11 @@ Example:
 
 
 # Intresting companies
+
+
+# Information intake
+
+Andrew Bosworth: https://fb.workplace.com/groups/ads.pages.fyi/permalink/1515588601823083/
 
 
 
