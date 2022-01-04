@@ -373,7 +373,7 @@ Ch7: Query Opt, http://www.redbook.io/ch7-queryoptimization.html
 
 - System R (DP search) 
 - The Volcano/Cascade  (Top down), which are notable in 2 things:
-  - Extensible (parameterizable with multiple input languages an dexecution targets, making it handy for different execution engines and data models)
+  - Extensible (parameterizable with multiple input languages and execution targets, making it handy for different execution engines and data models)
   - Top-down goal oritend search strategy (not neccessirily better than bottom-up though, still debatable) 
 
 
@@ -459,6 +459,111 @@ Resources:
 
 
 
+
+
+# Linux Code 
+
+## Processes 
+
+#### Design:
+
+- “The kernel stores the list of processes in a circular doubly linked list called the task list”
+- Some architecture stores the `current task` pointer in one of ther registers while some stored it at the top of the kernel stack (growing down). 
+
+
+
+#### Scheduling
+
+##### Why assigning absolute timeslices to nice value (priority) is troublesome?
+
+- HIgh switching cost <= running multiple low priority jobs <= they would context switch at a high frequency 
+- From relative to absolute <= increment in 1 of nice value might result in half of the time slices
+- Aboslute timeslices depend on the timer tick (which could be in the range of 10 - 1 `ms`) => too much variation 
+
+
+
+##### So comes the CFS:
+
+> “CFS is based on a simple concept: Model process scheduling as if the system had an ideal, perfectly multitasking processor. In such a system, each process would receive 1/n of the processor’s time, where n is the number of runnable processes, and we’d schedule them for infinitely small durations, so that in any measurable period we’d have run all n processes for the same amount of time”
+>
+> Excerpt From: Robert Love. “Linux Kernel Development, 3/e.” Apple Books. https://books.apple.com/us/book/linux-kernel-development-3-e/id401112485
+
+- nice value will change the relative weight a process owns (lower nice value => higher priority => higher proportion thant `1/n` )
+
+
+
+# Work Tips 
+
+### How to 1 on 1: 
+
+##### A couple of good phrases:
+
+- If you cannot handle the truth, don't ask me to be honest 
+
+
+
+##### Steps:
+
+1. make it safe for them:
+
+   - Be honest in really wanting the feedbacks 
+   - Give a reason 
+   - Tell them you already have an issue 
+   - Thank in advance
+
+   > Rethink my 1:1 with my Intern Mentor: 
+   >
+   > Hey man, thanks for taking you time to mentor me (4)! I really appreciate the fact that you set up such frequent meetings with me. And your feedback means a great deal(4) 
+   >
+   > You know, as an intern, I believe you are definitely seeing more things that I see, and I might not be aware of many of bad things I should not be doing, or things I should be doing more often. So I really want to take this time to hear your thoughts on my first 2 weeks. (1,2?)
+   >
+   > I see many other interns posting things on the intern group, should i be more active and visible in terms of my work, just like other interns who did that? Like, in general, how should I improve my communication? (3)
+
+2. Make it easy:
+
+   - Give options
+
+   - Ask about emotions (hmm, maybe hard on this one?)
+
+   - Ask for letter grade
+
+   - Ask to expand on feedbacks 
+
+     >So should I be doing more of A, B , C? Do you think if posting things more frequently is better? Like what you think would be a good frequency or occasion to do so? (1)
+     >
+     >I am not sure how others perceive the posting, I am afraid they would see it as you know, over self-promoting, what do you feel when you see such posts in general? (2). 
+     >
+     >One of the feedbacks I had was that I should probably reach out to more teammates more frequently, what do you think? Like what would be a good frequency? Because I feel not sure if I should reach out to them if there is no obvious agenda. 
+
+3. Make it rewarding: 
+
+   - Thank them (duhhh) 
+   - Apply to action 
+   - Attribute change/improvement to their feedback 
+
+
+
+
+
+
+
+
+
+# 购物
+
+羽绒服
+
+- https://thenorthface.world.tmall.com/category-1068419405.htm?spm=a312a.7700824.w4011-14964131723.57.2d671280jILPW2&catName=%D3%F0%C8%DE%B7%FE%2F%BC%D0%C3%DE&parentCatId=1068418495&parentCatName=%C4%D0%C9%CF%D7%B0&catId=1068419405&search=y&orderType=price_desc
+- https://detail.tmall.com/item.htm?spm=a312a.7700824.w4011-14711919654.101.5ac31410AFjLSj&id=600945498227&rn=4f8256ec3bdb60a10802f1eb05f30c1a&abbucket=4&sku_properties=1627207:3232483
+
+
+
+
+
+
+
+
+
 # Great Ideas in CS
 
 #### Caching and Lease 
@@ -520,6 +625,26 @@ Example:
 
 - Timestamp splitting: multiple timestamps for different fields 
 - Thread-local objects. 
+
+
+
+#### Prefetching
+
+Why: improves latency 
+
+Example: 
+
+- Bufferpool prefetching in DB 
+- instructions prefetching in CPU
+- page prefetching in OS disk I/O 
+
+
+
+
+
+# Intresting companies
+
+
 
 
 
